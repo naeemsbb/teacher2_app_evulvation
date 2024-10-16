@@ -7,7 +7,6 @@ import hashlib
 from io import BytesIO
 import sqlite3
 from fpdf import FPDF
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 # SQLite Database setup
 conn = sqlite3.connect('teacher_evaluation.db')
@@ -241,55 +240,54 @@ elif user_role == "Admin":
 
                 # Download Graphs as PDF
                 if st.button("Download Full Report as PDF"):
-                    pdf = FPDF()
-                    pdf.set_auto_page_break(auto=True, margin=15)
-                    pdf.add_page()
-                    pdf.set_font("Arial", size=12)
-                    pdf.cell(200, 10, txt="Teacher Evaluation Report", ln=True, align='C')
-
-                    # Add course graphs
-                    for course, data in course_groups:
+                    try:
+                        pdf = FPDF()
+                        pdf.set_auto_page_break(auto=True, margin=15)
                         pdf.add_page()
-                        pdf.cell(200, 10, txt=f"Course: {course}", ln=True, align='L')
-                        
-                        # Generate graph as image in memory
-                        fig, ax = plt.subplots()
-                        data['Q1'].value_counts().plot(kind='bar', ax=ax, title=f"Responses for Q1: {course}")
-                        
-                        canvas = FigureCanvas(fig)
-                        img_data = BytesIO()
-                        canvas.print_png(img_data)
-                        img_data.seek(0)
+                        pdf.set_font("Arial", size=12)
+                        pdf.cell(200, 10, txt="Teacher Evaluation Report", ln=True, align='C')
 
-                        pdf.image(img_data, x=10, y=20, w=180)
-                        plt.close(fig)
+                        # Add course graphs
+                        for course, data in course_groups:
+                            pdf.add_page()
+                            pdf.cell(200, 10, txt=f"Course: {course}", ln=True, align='L')
+                            
+                            # Generate graph as image in memory
+                            fig, ax = plt.subplots()
+                            data['Q1'].value_counts().plot(kind='bar', ax=ax, title=f"Responses for Q1: {course}")
+                            img_data = BytesIO()
+                            plt.savefig(img_data, format='png')
+                            img_data.seek(0)
 
-                    # Add teacher graphs
-                    for teacher, data in teacher_groups:
-                        pdf.add_page()
-                        pdf.cell(200, 10, txt=f"Teacher: {teacher}", ln=True, align='L')
-                        
-                        # Generate graph as image in memory
-                        fig, ax = plt.subplots()
-                        data['TQ1'].value_counts().plot(kind='bar', ax=ax, title=f"Responses for TQ1: {teacher}")
-                        
-                        canvas = FigureCanvas(fig)
-                        img_data = BytesIO()
-                        canvas.print_png(img_data)
-                        img_data.seek(0)
+                            pdf.image(img_data, x=10, y=20, w=180)
+                            plt.close(fig)
 
-                        pdf.image(img_data, x=10, y=20, w=180)
-                        plt.close(fig)
+                        # Add teacher graphs
+                        for teacher, data in teacher_groups:
+                            pdf.add_page()
+                            pdf.cell(200, 10, txt=f"Teacher: {teacher}", ln=True, align='L')
+                            
+                            # Generate graph as image in memory
+                            fig, ax = plt.subplots()
+                            data['TQ1'].value_counts().plot(kind='bar', ax=ax, title=f"Responses for TQ1: {teacher}")
+                            img_data = BytesIO()
+                            plt.savefig(img_data, format='png')
+                            img_data.seek(0)
 
-                    pdf_output = BytesIO()
-                    pdf.output(pdf_output)
-                    pdf_output.seek(0)
-                    st.download_button(
-                        label="Download Full Report as PDF",
-                        data=pdf_output,
-                        file_name="teacher_evaluation_report.pdf",
-                        mime="application/pdf"
-                    )
+                            pdf.image(img_data, x=10, y=20, w=180)
+                            plt.close(fig)
+
+                        pdf_output = BytesIO()
+                        pdf.output(pdf_output)
+                        pdf_output.seek(0)
+                        st.download_button(
+                            label="Download Full Report as PDF",
+                            data=pdf_output,
+                            file_name="teacher_evaluation_report.pdf",
+                            mime="application/pdf"
+                        )
+                    except Exception as e:
+                        st.error(f"An error occurred while generating the PDF: {e}")
             else:
                 st.warning("No evaluations found.")
         else:
