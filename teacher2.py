@@ -221,19 +221,6 @@ elif user_role == "Admin":
                     data['TQ1'].value_counts().plot(kind='bar', ax=ax, title=f"Responses for TQ1: {teacher}")
                     st.pyplot(fig)
 
-                # Count table for evaluations
-                st.header("Teacher Evaluation Count Summary")
-                teacher_count_summary = evaluations_df['Teacher Name'].value_counts().reset_index()
-                teacher_count_summary.columns = ['Teacher Name', 'Number of Evaluations']
-                st.table(teacher_count_summary)
-
-                # Detailed response count per teacher
-                st.header("Response Summary for Each Teacher")
-                response_summary = evaluations_df.groupby(['Teacher Name']).agg(lambda x: x.value_counts().to_dict()).reset_index()
-                for index, row in response_summary.iterrows():
-                    st.subheader(f"Teacher: {row['Teacher Name']}")
-                    st.write({col: row[col] for col in evaluations_df.columns if col not in ['ID', 'Student Name', 'Roll No', 'Class', 'Teacher Name', 'Subject']})
-
                 # Download Evaluations as Excel
                 def to_excel(df):
                     output = BytesIO()
@@ -289,12 +276,6 @@ elif user_role == "Admin":
 
                             pdf.image(img_data, x=10, y=20, w=180)
                             plt.close(fig)
-
-                        # Add count table
-                        pdf.add_page()
-                        pdf.cell(200, 10, txt="Teacher Evaluation Count Summary", ln=True, align='L')
-                        for index, row in teacher_count_summary.iterrows():
-                            pdf.cell(200, 10, txt=f"{row['Teacher Name']}: {row['Number of Evaluations']} evaluations", ln=True, align='L')
 
                         pdf_output = BytesIO()
                         pdf.output(pdf_output)
